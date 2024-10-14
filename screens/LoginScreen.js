@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Image } from "react-native";
+import { View, Text, TextInput, Button, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import axios from "axios";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 const LoginScreen = ({ navigation }) => {
   const { control, handleSubmit } = useForm();
@@ -29,9 +30,14 @@ const LoginScreen = ({ navigation }) => {
 
       console.log("API response:", response.data);
 
-      const { msg, token: { access, refresh } } = response.data;
-    //   console.log(access)
-    //   console.log(refresh)
+
+      const {
+        msg,
+        token: { access, refresh },
+      } = response.data;
+      console.log(typeof msg);
+      //   console.log(access)
+      //   console.log(refresh)
 
       if (typeof msg === "string") {
         // Store tokens in AsyncStorage if they are valid
@@ -53,7 +59,9 @@ const LoginScreen = ({ navigation }) => {
 
   const handleErrors = (error) => {
     if (error.response) {
-      const { errors, non_field_errors } = error.response.data;
+      console.log("third error",error.response.data.errors)
+      const { errors, non_field_errors } = error.response.data.errors;
+      // console.log(errors)
       setServerError(errors || {});
 
       if (non_field_errors) {
@@ -100,24 +108,33 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.error}>{serverError.email[0]}</Text>
       )}
 
-      <Text>Password</Text>
-      <Controller
-        control={control}
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            secureTextEntry={!showPassword}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
+      <View>
+        <Text>Password</Text>
+        <Controller
+          control={control}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
+          name="password"
+        />
+        <TouchableOpacity onPress={togglePassword} style={styles.eyeIcon}>
+          <Icon
+            name={showPassword ? "eye" : "eye-off"}
+            size={24}
+            color="gray"
           />
+        </TouchableOpacity>
+        {serverError?.password && (
+          <Text style={styles.error}>{serverError.password[0]}</Text>
         )}
-        name="password"
-      />
-      {serverError?.password && (
-        <Text style={styles.error}>{serverError.password[0]}</Text>
-      )}
+      </View>
       <Button title="Login" onPress={handleSubmit(onSubmit)} />
     </View>
   );
@@ -144,10 +161,16 @@ const styles = StyleSheet.create({
     height: 40,
     borderColor: "gray",
     borderWidth: 1,
-    marginBottom: 15,
+    marginBottom: 10,
     paddingHorizontal: 10,
     borderRadius: 5,
     marginTop: 10,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 10,
+    padding: 5,
+    top:30,
   },
   error: {
     color: "red",
